@@ -107,9 +107,9 @@ IMG_WIDTH = 4024
 IMG_HEIGHT = 6024
 K = 5
 mask_region = [[0,4024], [0, 3012]]
-MATCH_NUM = 3
-imgPath1 = '**.ARW'
-imgPath2 = '***.ARW'
+MATCH_NUM = 50
+imgPath1 = 'DSC02445.ARW'
+imgPath2 = 'D:\\Files\\照片\\星空\\DSC02434.ARW'
 img1 = readImage(imgPath1, IMG_WIDTH, IMG_HEIGHT, 1)
 starExtractedImg1 = processImage(img1, 1)
 cv2.imwrite('test1.jpg', starExtractedImg1)
@@ -126,14 +126,16 @@ starCentroids2 = feature2['star_centroids']
 coordinates1 = np.array([list(starCentroids1[matchedStars[i][0]]) for i in range(MATCH_NUM)], dtype=np.float32)
 coordinates2 = np.array([list(starCentroids2[matchedStars[i][1]]) for i in range(MATCH_NUM)], dtype=np.float32)
 print(coordinates1, coordinates2)
-affine_matrix = cv2.getAffineTransform(coordinates1, coordinates2)
-print(affine_matrix)
 
+tf = cv2.findHomography(coordinates1, coordinates2,
+                                    method=cv2.RANSAC, ransacReprojThreshold=5)
+#perspective_matrix = cv2.getPerspectiveTransform(coordinates1, coordinates2)
+#print(perspective_matrix)
 raw = rawpy.imread(imgPath1)
 
 rgb = raw.postprocess(use_camera_wb=True, half_size=False, no_auto_bright=False, output_bps=8)
 cv2.imwrite('postprocess.jpg', rgb)
-output_image = cv2.warpAffine(rgb, affine_matrix, (IMG_WIDTH, IMG_HEIGHT))
+output_image = cv2.warpPerspective(rgb, tf[0], (IMG_WIDTH, IMG_HEIGHT))
 cv2.imwrite('output.jpg', output_image)
 
 '''
